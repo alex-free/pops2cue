@@ -46,14 +46,14 @@ void usage(const char* app_bin, int argc, const char* arg_opt)
   puts("-nobin      : Do not save the disc image (saves the cuesheet only)");
   puts("-noindex00  : Do not save INDEX 00 entries in the cuesheet\n");
   puts("This program accepts VCDs that were made with CUE2POPS v2.0\n");
-//  system("pause");
   putchar(10);
   return;
 }
 
 int main(int argc, char *argv[])
 {
-  bool noBin, noIndex;
+  bool noBin = false;
+  bool noIndex = false;
   int res;
   int ret;
   FILE *fVCD;
@@ -66,13 +66,6 @@ int main(int argc, char *argv[])
   long bin_size;
   char buffer[8];
 
-  char DAT_00402bfa[] = "\x22";
-  char DAT_00402c40[] = "\x20";
-  char DAT_00402c61[] = "\x3a";
-  char DAT_00402c71[] = "\x0a";
-  
-  noBin = false;
-  noIndex = false;
   puts("\nPOPS2CUE v1.0, a POPS VCD to BIN+CUE converter\n");
   if (argc == 1) {
     usage(argv[0], 0, 0);
@@ -366,7 +359,7 @@ int main(int argc, char *argv[])
                             *(char *)(argv[1] + k + -1) = 0x6e;
                             fwrite("FILE ",1,5,fOut);
 							if (*(char *)argv[1] != '\"') {
-                              fwrite(&DAT_00402bfa,1,1,fOut);
+                              fwrite("\x22", 1, 1, fOut);
                             }
                             sLen = strlen((char *)argv[1]);
                             for (j = (int)sLen; 0 < j; j--) {
@@ -381,7 +374,7 @@ int main(int argc, char *argv[])
                               fwrite((void *)argv[1],1,k,fOut);
                             }
                             if (*(char *)argv[1] != '\"') {
-                              fwrite(&DAT_00402bfa,1,1,fOut);
+                              fwrite("\x22", 1, 1, fOut);
                             }
                             fwrite(" BINARY\n   TRACK 01 MODE2/2352\n   INDEX 01 00:00:00\n",1,0x34, fOut);
                             pos = 0x28;
@@ -389,7 +382,7 @@ int main(int argc, char *argv[])
                               fwrite("   TRACK \n",1,9,fOut);
                               converter((int)vcd_hdr[pos + 2],1,buffer);
                               fwrite(buffer,1,2,fOut);
-                              fwrite(&DAT_00402c40,1,1,fOut);
+                              fwrite("\x20", 1, 1,fOut);
                               if (vcd_hdr[pos] == 'A') {
                                 fwrite("MODE2/2352",1,10,fOut);
                               }
@@ -401,24 +394,24 @@ int main(int argc, char *argv[])
                                 fwrite("\n   INDEX 00 ",1,0xd,fOut);
                                 converter((int)vcd_hdr[pos + 3],1,buffer);
                                 fwrite(buffer,1,2,fOut);
-                                fwrite(&DAT_00402c61,1,1,fOut);
+                                fwrite(":",1,1,fOut);
                                 converter((int)vcd_hdr[pos + 4],1,buffer);
                                 fwrite(buffer,1,2,fOut);
-                                fwrite(&DAT_00402c61,1,1,fOut);
+                                fwrite(":", 1, 1, fOut);
                                 converter((int)vcd_hdr[pos + 5],1,buffer);
                                 fwrite(buffer,1,2,fOut);
                               }
                               fwrite("\n   INDEX 01 ",1,0xd,fOut);
                               converter((int)vcd_hdr[pos + 7],1,buffer);
                               fwrite(buffer,1,2,fOut);
-                              fwrite(&DAT_00402c61,1,1,fOut);
+                              fwrite(":", 1, 1, fOut);
                               converter((int)vcd_hdr[pos + 8],1,buffer);
                               fwrite(buffer,1,2,fOut);
-                              fwrite(&DAT_00402c61,1,1,fOut);
+                              fwrite(":", 1, 1, fOut);
                               converter((int)vcd_hdr[pos + 9],1,buffer);
                               fwrite(buffer,1,2,fOut);
                               if (res + -1 != i) {
-                                fwrite(&DAT_00402c71,1,1,fOut);
+                                fwrite("\x0a", 1, 1, fOut);
                               }
                               pos += 10;
                             }
