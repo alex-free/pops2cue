@@ -57,7 +57,6 @@ int main(int argc, char *argv[])
   int res;
   int ret;
   FILE *fVCD;
-  off_t vcd_size;
   size_t sLen;
   FILE *fOut;
   int i, j, k;
@@ -126,8 +125,7 @@ int main(int argc, char *argv[])
     }
     else {
       fseeko(fVCD, 0, SEEK_END);
-      vcd_size = ftello(fVCD);
-      bin_size = (long)(int)vcd_size;
+      bin_size = ftello(fVCD);
       if (bin_size < 0x10a560) {
         puts("\nError : Input file isn\'t a POPS VCD\n");
         fclose(fVCD);
@@ -358,7 +356,7 @@ int main(int argc, char *argv[])
                             *(char *)(argv[1] + k + -2) = 0x69;
                             *(char *)(argv[1] + k + -1) = 0x6e;
                             fwrite("FILE ",1,5,fOut);
-							if (*(char *)argv[1] != '\"') {
+							              if (*(char *)argv[1] != '\"') {
                               fwrite("\x22", 1, 1, fOut);
                             }
                             sLen = strlen((char *)argv[1]);
