@@ -57,7 +57,6 @@ int main(int argc, char *argv[])
   int res;
   int ret;
   FILE *fVCD;
-  size_t sLen;
   FILE *fOut;
   int i, j, k;
   int pos;
@@ -314,8 +313,7 @@ int main(int argc, char *argv[])
                             pos = pos + 10;
                           }
                           puts(" Done");
-                          sLen = strlen((char *)argv[1]);
-                          i = (int)sLen;
+                          i = strlen((char *)argv[1]);
                           while ((0 < i &&
                                  ((((*(char *)(i + argv[1]) != '.' ||
                                     (*(char *)(argv[1] + i + 1) != 'V')) ||
@@ -324,8 +322,7 @@ int main(int argc, char *argv[])
                             i--;
                           }
                           if (i < 0) {
-                            sLen = strlen((char *)argv[1]);
-                            k = (int)sLen;
+                            k = strlen((char *)argv[1]);
                             if (*(char *)argv[1] == '\"') {
                               *(char *)(argv[1] + k + 4) = 0x22;
                             }
@@ -350,17 +347,15 @@ int main(int argc, char *argv[])
                             ret = 0;
                           }
                           else {
-                            sLen = strlen((char *)argv[1]);
-                            k = (int)sLen;
+                            k = strlen((char *)argv[1]);
                             *(char *)(argv[1] + k + -3) = 0x62;
                             *(char *)(argv[1] + k + -2) = 0x69;
                             *(char *)(argv[1] + k + -1) = 0x6e;
                             fwrite("FILE ",1,5,fOut);
-							              if (*(char *)argv[1] != '\"') {
+                            if (*(char *)argv[1] != '\"') {
                               fwrite("\x22", 1, 1, fOut);
                             }
-                            sLen = strlen((char *)argv[1]);
-                            for (j = (int)sLen; 0 < j; j--) {
+                            for (j = strlen((char *)argv[1]); 0 < j; j--) {
                               if (((*(char *)(argv[1] + j + -1) == ':') ||
                                   (*(char *)(argv[1] + j + -1) == '/')) ||
                                  (*(char *)(argv[1] + j + -1) == '\\')) {
