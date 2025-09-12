@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#define IOBUF_SIZE 0xA00000 // 10MB buffer size for caching BIN data in file output operations
 
 FILE *file, *leech; //file is used for opening the input cue and the output file, leech is used for opening the BIN that's attached to the cue.
 char *dumpaddr; // name/path of the BIN that is attached to the cue. Handled by the parser then altered if it doesn't contain the full path.
@@ -81,7 +82,7 @@ int main(int argc,char *argv[])
   int index0_adj = 0;
   int cuesize; // Size of the cue sheet
   char *ptr; // Pointer to the Track 01 type in the cue. Used to set the sector size, the disc type or to reject the cue
-  size_t i;
+  size_t i; // Tracker
   char *cuebuf; // Buffer for the cue sheet
   char *headerbuf; // Buffer for the POPS header
   void *outbuf; // File I/O cache
@@ -128,7 +129,7 @@ int main(int argc,char *argv[])
               cuesize = (int)ftell(file);
               if (cuesize < 0xd351) {
                 rewind(file);
-                for (i = 0; (long)i < (long)cuesize; i++) {
+                for (i = 0; (long)i < cuesize; i++) {
                   fseek(file, i, SEEK_SET);
                   if (fgetc(file) == 'F') {
                     if (fgetc(file) == 'I') {
@@ -142,7 +143,7 @@ int main(int argc,char *argv[])
                     }
                   }
                 }
-                if ((long)cuesize == i) {
+                if (cuesize == (int)i) {
                   puts("Error: The cue sheet is not valid\n");
                   fclose(file);
                   system_pause();
@@ -152,7 +153,7 @@ int main(int argc,char *argv[])
                 else {
                   rewind(file);
                   cuebuf = (char *)malloc((long)(cuesize * 2));
-                  fread(cuebuf,(long)cuesize,1,file);
+                  fread(cuebuf,cuesize,1,file);
                   fclose(file);
                   ptr = strstr(cuebuf,"INDEX 01 ");
                   if (ptr == NULL) {
@@ -174,7 +175,7 @@ int main(int argc,char *argv[])
                     ptr = strstr(cuebuf,"FILE ");
                     ptr += 5;
                     if (*ptr == '\"') {
-                      for (i = 0; (long)i < (long)cuesize; i++) {
+                      for (i = 0; (long)i < cuesize; i++) {
                         if (cuebuf[i] == '\"') {
                           cuebuf[i] = '\0';
                         }
@@ -243,7 +244,7 @@ int main(int argc,char *argv[])
                         headerbuf[0xc] = 0xa1;
                         headerbuf[0x16] = 0xa2;
                         for (i = 0;
-                            ((long)i < (long)cuesize &&
+                            ((long)i < cuesize &&
                             (((((cuebuf[i] != 'T' || (cuebuf[i + 1] != 'R')) ||
                                (cuebuf[i + 2] != 'A')) ||
                               (((cuebuf[i + 3] != 'C' || (cuebuf[i + 4] != 'K'))
@@ -267,7 +268,7 @@ int main(int argc,char *argv[])
                         }
                         else {
                           sectorsize = 0x930;
-                          for (i = 0; (long)i < (long)cuesize; i++) {
+                          for (i = 0; (long)i < cuesize; i++) {
                             if (cuebuf[i] == ':') {
                               cuebuf[i] = '\0';
                             }
@@ -505,7 +506,7 @@ int main(int argc,char *argv[])
                                     }
                                   }
                                   else if (((daTrack_ptr == 0) && (headerbuf[10] == 'A')) &&
-                                          ((long)(track_count + -1) == i)) {
+                                          ((track_count - 1) == (int)i)) {
                                     daTrack_ptr = dumpsize;
                                   }
                                   headerbuf[header_ptr + 3] = (char)mm;
@@ -862,25 +863,25 @@ int main(int argc,char *argv[])
                                   }
                                   else {
                                     free(dumpaddr);
-                                    outbuf = malloc(0xa00400);
-                                    for (i = 0; (long)i < dumpsize; i += 0xa00000) {
+                                    outbuf = malloc(IOBUF_SIZE + 0x0400);
+                                    for (i = 0; (long)i < dumpsize; i += IOBUF_SIZE) {
                                       if ((fix_CDRWIN == 1) &&
-                                         (daTrack_ptr <= (long)(i + 0xa00000))) {
-                                        fread(outbuf,(daTrack_ptr - (i + 0xa00000)) + 0xa00000,1,leech);
-                                        fwrite(outbuf,(daTrack_ptr - (i + 0xa00000)) + 0xa00000,1,file);
+                                         (daTrack_ptr <= (long)(i + IOBUF_SIZE))) {
+                                        fread(outbuf,(daTrack_ptr - (i + IOBUF_SIZE)) + IOBUF_SIZE,1,leech);
+                                        fwrite(outbuf,(daTrack_ptr - (i + IOBUF_SIZE)) + IOBUF_SIZE,1,file);
                                         char padding[sectorsize * 300];
                                         fwrite(padding,(long)(sectorsize * 0x96),1, file);
-                                        fread(outbuf,(i - daTrack_ptr) + 0xa00000,1,leech);
-                                        fwrite(outbuf,(i - daTrack_ptr) + 0xa00000,1,file);
+                                        fread(outbuf,(i - daTrack_ptr) + IOBUF_SIZE,1,leech);
+                                        fwrite(outbuf,(i - daTrack_ptr) + IOBUF_SIZE,1,file);
                                         fix_CDRWIN = 0;
                                       }
                                       else {
-                                        fread(outbuf,0xa00000,1,leech);
-                                        if ((long)(i + 0xa00000) < dumpsize) {
-                                          fwrite(outbuf,0xa00000,1,file);
+                                        fread(outbuf,IOBUF_SIZE,1,leech);
+                                        if ((long)(i + IOBUF_SIZE) < dumpsize) {
+                                          fwrite(outbuf,IOBUF_SIZE,1,file);
                                         }
                                         else {
-                                          fwrite(outbuf,(dumpsize - (i + 0xa00000)) + 0xa00000,1,file);
+                                          fwrite(outbuf,(dumpsize - (i + IOBUF_SIZE)) + IOBUF_SIZE,1,file);
                                         }
                                       }
                                     }
@@ -967,24 +968,24 @@ int main(int argc,char *argv[])
                                     else {
                                       free(dumpaddr);
                                       outbuf = malloc(0xa00400);
-                                      for (i = 0; (long)i < dumpsize; i += 0xa00000) {
+                                      for (i = 0; (long)i < dumpsize; i += IOBUF_SIZE) {
                                         if ((fix_CDRWIN == 1) &&
-                                           (daTrack_ptr <= (long)(i + 0xa00000))) {
-                                          fread(outbuf,(daTrack_ptr - (i + 0xa00000)) + 0xa00000,1,leech);
-                                          fwrite(outbuf,(daTrack_ptr - (i + 0xa00000)) + 0xa00000,1,file);
+                                           (daTrack_ptr <= (long)(i + IOBUF_SIZE))) {
+                                          fread(outbuf,(daTrack_ptr - (i + IOBUF_SIZE)) + IOBUF_SIZE,1,leech);
+                                          fwrite(outbuf,(daTrack_ptr - (i + IOBUF_SIZE)) + IOBUF_SIZE,1,file);
                                           char padding[sectorsize * 300];
                                           fwrite(padding,(long)(sectorsize * 0x96),1, file);
-                                          fread(outbuf,(i - daTrack_ptr) + 0xa00000,1,leech);
-                                          fwrite(outbuf,(i - daTrack_ptr) + 0xa00000,1,file);
+                                          fread(outbuf,(i - daTrack_ptr) + IOBUF_SIZE,1,leech);
+                                          fwrite(outbuf,(i - daTrack_ptr) + IOBUF_SIZE,1,file);
                                           fix_CDRWIN = 0;
                                         }
                                         else {
-                                          fread(outbuf,0xa00000,1,leech);
-                                          if ((long)(i + 0xa00000) < dumpsize) {
-                                            fwrite(outbuf,0xa00000,1,file);
+                                          fread(outbuf,IOBUF_SIZE,1,leech);
+                                          if ((long)(i + IOBUF_SIZE) < dumpsize) {
+                                            fwrite(outbuf,IOBUF_SIZE,1,file);
                                           }
                                           else {
-                                            fwrite(outbuf,(dumpsize - (i + 0xa00000)) + 0xa00000,1,file);
+                                            fwrite(outbuf,(dumpsize - (i + IOBUF_SIZE)) + IOBUF_SIZE,1,file);
                                           }
                                         }
                                       }
