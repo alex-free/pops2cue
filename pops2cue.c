@@ -45,9 +45,8 @@ void usage(const char* app_bin, int argc, const char* arg_opt)
   puts("Options are :");
   puts("-nobin      : Do not save the disc image (saves the cuesheet only)");
   puts("-noindex00  : Do not save INDEX 00 entries in the cuesheet\n");
-  puts("This program accepts VCDs that were made with CUE2POPS v2.0\n");
-  putchar(10);
-  return;
+  puts("This program accepts VCDs that were made with CUE2POPS v2.0\n\n");
+  exit(1);
 }
 
 int main(int argc, char *argv[])
@@ -67,7 +66,6 @@ int main(int argc, char *argv[])
   puts("\nPOPS2CUE v1.0, a POPS VCD to BIN+CUE converter\n");
   if (argc == 1) {
     usage(argv[0], 0, 0);
-    ret = 0;
   }
   else if (((argc == 2) || (argc == 3)) || (argc == 4)) {
     if (argc == 3) {
@@ -87,8 +85,6 @@ int main(int argc, char *argv[])
              (res = strcmp((char *)argv[2],"/noINDEX00"), res != 0)))) &&
            (res = strcmp((char *)argv[2],"-noINDEX00"), res != 0)) {
           usage(argv[0], 1, argv[2]);
-          ret = 0;
-          goto ExitApp;
         }
         noIndex = true;
       }
@@ -110,8 +106,6 @@ int main(int argc, char *argv[])
              (res = strcmp((char *)argv[3],"/noINDEX00"), res != 0)) &&
             (res = strcmp((char *)argv[3],"-noINDEX00"), res != 0)))) {
           usage(argv[0],1,argv[3]);
-          ret = 0;
-          goto ExitApp;
         }
         noIndex = true;
       }
@@ -120,7 +114,7 @@ int main(int argc, char *argv[])
     fVCD = fopen((char *)argv[1],"rb");
     if (fVCD == NULL) {
       printf("Error : Cannot open %s\n\n",argv[1]);
-      ret = 0;
+      exit(1);
     }
     else {
       fseeko(fVCD, 0, SEEK_END);
@@ -128,7 +122,7 @@ int main(int argc, char *argv[])
       if (bin_size < 0x10a560) {
         puts("\nError : Input file isn\'t a POPS VCD\n");
         fclose(fVCD);
-        ret = 0;
+        exit(1);
       }
       else {
         if (noBin) {
@@ -163,7 +157,7 @@ int main(int argc, char *argv[])
                           puts("\nError : Invalid VCD");
                           puts("        You cannot convert a VCD that has been made by CUE2POPS v1.X\n");
                           free(vcd_hdr);
-                          ret = 0;
+                          exit(1);
                         }
                         else {
                           printf(" Done\nReverting the timestamps...");
@@ -344,7 +338,7 @@ int main(int argc, char *argv[])
                               fclose(fVCD);
                             }
                             free(vcd_hdr);
-                            ret = 0;
+                            exit(1);
                           }
                           else {
                             k = strlen((char *)argv[1]);
@@ -418,8 +412,7 @@ int main(int argc, char *argv[])
                                 printf("Error : Cannot write to %s\n\n",argv[1]);
                                 fclose(fVCD);
                                 free(vcd_hdr);
-                                ret = 0;
-                                goto ExitApp;
+                                exit(1);
                               }
                               for (i = 0; i < bin_size; i += 0xa00000) {
                                 fread(vcd_hdr,0xa00000,1,fVCD);
@@ -435,7 +428,7 @@ int main(int argc, char *argv[])
                             }
                             free(vcd_hdr);
                             puts(" Done\n");
-                            ret = 1;
+                            exit(0);
                           }
                         }
                       }
@@ -446,7 +439,7 @@ int main(int argc, char *argv[])
                         puts("\nError : Invalid VCD");
                         puts("        The disc image hasn\'t been converted by CUE2POPS\n");
                         free(vcd_hdr);
-                        ret = 0;
+                        exit(1);
                       }
                     }
                     else {
@@ -456,7 +449,7 @@ int main(int argc, char *argv[])
                       puts("\nError : Invalid VCD");
                       puts("        The first track isn\'t TRACK 01\n");
                       free(vcd_hdr);
-                      ret = 0;
+                      exit(1);
                     }
                   }
                   else {
@@ -466,7 +459,7 @@ int main(int argc, char *argv[])
                     puts("\nError : Invalid VCD");
                     puts("        The disc type isn\'t CD-XA001\n");
                     free(vcd_hdr);
-                    ret = 0;
+                    exit(1);
                   }
                 }
                 else {
@@ -476,7 +469,7 @@ int main(int argc, char *argv[])
                   free(vcd_hdr);
                   puts("\nError : Invalid VCD");
                   puts("        The first track must be a DATA track\n");
-                  ret = 0;
+                  exit(1);
                 }
               }
               else {
@@ -486,7 +479,7 @@ int main(int argc, char *argv[])
                 puts("\nError : Invalid VCD");
                 puts("        The disc lead-in/out array wasn\'t found\n");
                 free(vcd_hdr);
-                ret = 0;
+                exit(1);
               }
             }
             else {
@@ -496,7 +489,7 @@ int main(int argc, char *argv[])
               puts("\nError : Invalid VCD");
               puts("        The disc content array wasn\'t found\n");
               free(vcd_hdr);
-              ret = 0;
+              exit(1);
             }
           }
           else {
@@ -506,7 +499,7 @@ int main(int argc, char *argv[])
             puts("\nError : Invalid VCD");
             puts("        The disc type array wasn\'t found\n");
             free(vcd_hdr);
-            ret = 0;
+            exit(1);
           }
         }
         else {
@@ -516,16 +509,12 @@ int main(int argc, char *argv[])
           puts("\nError : Invalid VCD");
           puts("        Malformed disc image entry (sector count)\n");
           free(vcd_hdr);
-          ret = 0;
+          exit(1);
         }
       }
     }
   }
   else {
     usage(argv[0],2,0);
-    ret = 0;
   }
-
-ExitApp:
-  return ret;
 }
