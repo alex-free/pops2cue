@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 
   puts("\nPOPS2CUE v1.0, a POPS VCD to BIN+CUE converter\n");
   if (argc == 1) {
-    usage(argv[0], 0, 0);
+    usage(argv[0], 0, NULL);
     exit(1);
   }
   else if (((argc == 2) || (argc == 3)) || (argc == 4)) {
@@ -518,7 +518,7 @@ int main(int argc, char *argv[])
     }
   }
   else {
-    usage(argv[0],2,0);
+    usage(argv[0], 2, NULL);
     exit(1);
   }
 }
