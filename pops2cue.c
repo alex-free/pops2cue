@@ -46,7 +46,7 @@ void usage(const char* app_bin, int argc, const char* arg_opt)
   puts("-nobin      : Do not save the disc image (saves the cuesheet only)");
   puts("-noindex00  : Do not save INDEX 00 entries in the cuesheet\n");
   puts("This program accepts VCDs that were made with CUE2POPS v2.0\n\n");
-  exit(1);
+  return;
 }
 
 int main(int argc, char *argv[])
@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
   puts("\nPOPS2CUE v1.0, a POPS VCD to BIN+CUE converter\n");
   if (argc == 1) {
     usage(argv[0], 0, 0);
+    exit(1);
   }
   else if (((argc == 2) || (argc == 3)) || (argc == 4)) {
     if (argc == 3) {
@@ -85,6 +86,7 @@ int main(int argc, char *argv[])
              (res = strcmp((char *)argv[2],"/noINDEX00"), res != 0)))) &&
            (res = strcmp((char *)argv[2],"-noINDEX00"), res != 0)) {
           usage(argv[0], 1, argv[2]);
+          exit(1);
         }
         noIndex = true;
       }
@@ -106,6 +108,7 @@ int main(int argc, char *argv[])
              (res = strcmp((char *)argv[3],"/noINDEX00"), res != 0)) &&
             (res = strcmp((char *)argv[3],"-noINDEX00"), res != 0)))) {
           usage(argv[0],1,argv[3]);
+          exit(1);
         }
         noIndex = true;
       }
@@ -516,5 +519,6 @@ int main(int argc, char *argv[])
   }
   else {
     usage(argv[0],2,0);
+    exit(1);
   }
 }
